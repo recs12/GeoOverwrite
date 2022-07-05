@@ -55,7 +55,6 @@ module ManageGEOFiles =
             let afterGravure: string [] = modifiedArray.[index + 1 ..]
             let newList: string [] = Array.append [| mark |] afterGravure
             modifiedArray <- Array.append beforeGravure newList
-            printfn "%s" (String.replicate  10 "-")
             printfn "[+] Line %i -> %s" line mark
 
         String.concat "\n" modifiedArray
@@ -63,6 +62,7 @@ module ManageGEOFiles =
 
     let replaceGravuresGeoFile (linesAndGravures: string * list<int * string>):string*string =
         let (_geoFile:string), (LinesAndMarks:list<int*string>) = linesAndGravures
+        printfn "%s" (String.replicate  10 "-")
         match File.Exists(_geoFile) with
         | false -> 
             printfn "[!FILENOTFOUND] File: %*s" 10 _geoFile
@@ -88,6 +88,8 @@ module ManageGEOFiles =
         |> Array.map replaceGravuresGeoFile
         |> Array.Parallel.iter (fun (file,content) -> OverWriteGeo file content)
         stopwatch.Stop()
-        printfn "Process Duration: %d ms" stopwatch.ElapsedMilliseconds
+        printfn "Process Duration: %d ms\n" stopwatch.ElapsedMilliseconds
+        printfn "Press any key to exit..."
+        Console.ReadLine()|> ignore
         0
 
