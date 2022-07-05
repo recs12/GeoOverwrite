@@ -55,20 +55,27 @@ module ManageGEOFiles =
             let afterGravure: string [] = modifiedArray.[index + 1 ..]
             let newList: string [] = Array.append [| mark |] afterGravure
             modifiedArray <- Array.append beforeGravure newList
+            printfn "%s" (String.replicate  10 "-")
             printfn "[+] Line %i -> %s" line mark
 
         String.concat "\n" modifiedArray
 
 
-    let replaceGravuresGeoFile (linesAndGravures: string * list<int * string>) : unit =
+    let replaceGravuresGeoFile (linesAndGravures: string * list<int * string>):string*string =
         let (_geoFile:string), (LinesAndMarks:list<int*string>) = linesAndGravures
         match File.Exists(_geoFile) with
-        | false -> printfn "[!FILENOTFOUND] File: %*s" 10 _geoFile
+        | false -> 
+            printfn "[!FILENOTFOUND] File: %*s" 10 _geoFile
+            ("","")
         | true ->
             let (listOfElements: string[]) = File.ReadAllLines(_geoFile)
-            let (newContentGeo :string) = createAlteredContent listOfElements LinesAndMarks
-            File.WriteAllText(_geoFile, newContentGeo)
+            let ncontent = createAlteredContent listOfElements LinesAndMarks
             printfn "[MODIFIED] File: %*s" 10 _geoFile
+            (_geoFile, ncontent)
+
+
+    let OverWriteGeo (file:String) (content:string):unit =
+        if (file,content) <> ("","") then File.WriteAllText(file, content)
 
 
     [<EntryPoint>]
@@ -78,8 +85,9 @@ module ManageGEOFiles =
         stopwatch.Start();
         Console.ReadLine()
         |> GetGravuresGeoFiles
-        |> Array.iter replaceGravuresGeoFile
-        stopwatch.Stop();
+        |> Array.map replaceGravuresGeoFile
+        |> Array.Parallel.iter (fun (file,content) -> OverWriteGeo file content)
+        stopwatch.Stop()
         printfn "Process Duration: %d ms" stopwatch.ElapsedMilliseconds
         0
 
